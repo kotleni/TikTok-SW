@@ -82,16 +82,16 @@ class MainActivity : AppCompatActivity() {
         @android.webkit.JavascriptInterface
         fun onVideoPlaying() {
             println("onVideoPlaying()")
-        }
-
-        @android.webkit.JavascriptInterface
-        fun onVideoEnded() {
-            println("onVideoEnded()")
 
             if(System.currentTimeMillis() - lastScoreUpdate > 1_000) {
                 updateCounter()
                 lastScoreUpdate = System.currentTimeMillis()
             }
+        }
+
+        @android.webkit.JavascriptInterface
+        fun onVideoEnded() {
+            println("onVideoEnded()")
 
             binding.webView.post {
                 if(isEnabled) {
