@@ -9,6 +9,8 @@ import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.MotionEvent.PointerCoords
 import android.view.MotionEvent.PointerProperties
+import android.view.View
+import android.view.ViewTreeObserver
 import android.webkit.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +28,8 @@ class MainActivity : AppCompatActivity() {
     private var isEnabled = false
     private var score = 0
     private var lastScoreUpdate = 0L
+    private var isDebugMode = false
+    private var viewHeight = 0f
 
     inner class MyWebViewClient: WebViewClient() {
         override fun onPageFinished(view: WebView?, url: String?) {
@@ -137,6 +141,16 @@ class MainActivity : AppCompatActivity() {
             simulateSwipe()
         }
 
+        binding.toggleButton.setOnLongClickListener {
+            isDebugMode = true
+
+            binding.swipeButton.visibility = View.VISIBLE
+            val values = matchValues()
+            binding.debugView.updateValues(values)
+
+            true
+        }
+
         updateCounterView()
     }
 
@@ -161,73 +175,78 @@ class MainActivity : AppCompatActivity() {
         binding.videosScore.text = "${score}/${totalCount}"
     }
 
-    private fun simulateSwipe() = GlobalScope.launch(Dispatchers.Main) {
-        var x = 140f
-        val height = binding.webView.contentHeight
-        val startY = height - 100f
-        val endY = (height / 2f) + 100f
-        val endY2 = (height / 2f)
-        val endY3 = (height / 2f) - 100f
+    data class ContentValues(
+        val width: Float,
+        val height: Float,
 
-        val downTime = SystemClock.uptimeMillis()
-        val eventTime = SystemClock.uptimeMillis()
+        val swipeX: Float,
+        val swipeStartY: Float,
+        val swipeHalfY: Float,
+        val swipeEndY: Float
+    )
+
+    private fun matchValues(): ContentValues {
+        val width = binding.webView.width.toFloat()
+        val height = binding.webView.height.toFloat()
+
+        val startPercents = 80f
+        val halfPercents = 50f
+        val endPercents = 15f
+        val xPercents = 70f
+
+        val swipeX = (width / 100f) * xPercents
+        val swipeStartY = ((height / 100f) * startPercents)
+        val swipeHalfY = ((height / 100f) * halfPercents)
+        val swipeEndY = ((height / 100f) * endPercents)
+
+        return ContentValues(
+            width,
+            height,
+
+            swipeX,
+            swipeStartY,
+            swipeHalfY,
+            swipeEndY
+        )
+    }
+
+    private fun simulateSwipe() = GlobalScope.launch(Dispatchers.Main) {
+        val values = matchValues()
+        if(isDebugMode)
+            binding.debugView.updateValues(values)
+
         val properties = arrayOfNulls<PointerProperties>(1)
         val pp1 = PointerProperties()
         pp1.id = 0
         pp1.toolType = MotionEvent.TOOL_TYPE_FINGER
         properties[0] = pp1
+
         val pointerCoords = arrayOfNulls<PointerCoords>(1)
         val pc1 = PointerCoords()
-        pc1.x = x.toFloat()
-        pc1.y = startY
         pc1.pressure = 1f
         pc1.size = 1f
         pointerCoords[0] = pc1
 
-        var motionEvent = MotionEvent.obtain(
-            downTime, eventTime,
-            MotionEvent.ACTION_DOWN, 1, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
-        )
-        dispatchTouchEvent(motionEvent)
+        suspend fun makeEvent(x: Float, y: Float, event: Int) {
+            pc1.x = x
+            pc1.y = y
 
-        delay(40)
+            val eventTime = SystemClock.uptimeMillis()
 
-        pc1.y = endY
-        motionEvent = MotionEvent.obtain(
-            downTime, eventTime,
-            MotionEvent.ACTION_MOVE, 1, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
-        )
-        binding.webView.dispatchTouchEvent(motionEvent)
+            val motionEvent = MotionEvent.obtain(
+                eventTime, eventTime,
+                event, 1, properties,
+                pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
+            )
+            dispatchTouchEvent(motionEvent)
 
-        delay(40)
+            delay(40)
+        }
 
-        pc1.y = endY2
-        motionEvent = MotionEvent.obtain(
-            downTime, eventTime,
-            MotionEvent.ACTION_MOVE, 1, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
-        )
-        binding.webView.dispatchTouchEvent(motionEvent)
-
-        delay(40)
-
-        pc1.y = endY3
-        motionEvent = MotionEvent.obtain(
-            downTime, eventTime,
-            MotionEvent.ACTION_MOVE, 1, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
-        )
-        binding.webView.dispatchTouchEvent(motionEvent)
-
-        delay(40)
-
-        motionEvent = MotionEvent.obtain(
-            downTime, eventTime,
-            MotionEvent.ACTION_UP, 1, properties,
-            pointerCoords, 0, 0, 1f, 1f, 0, 0, 0, 0
-        )
-        binding.webView.dispatchTouchEvent(motionEvent)
+        makeEvent(values.swipeX, values.swipeStartY, MotionEvent.ACTION_DOWN)
+        makeEvent(values.swipeX, values.swipeStartY, MotionEvent.ACTION_MOVE)
+        makeEvent(values.swipeX, values.swipeHalfY, MotionEvent.ACTION_MOVE)
+        makeEvent(values.swipeX, values.swipeEndY, MotionEvent.ACTION_MOVE)
+        makeEvent(values.swipeX, values.swipeEndY, MotionEvent.ACTION_UP)
     }
 }

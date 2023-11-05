@@ -16,6 +16,15 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
+    <app.kotleni.tiktokautoswipe.DebugView
+            android:id="@+id/debugView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toLeftOf="@id/webView"
+            app:layout_constraintRight_toRightOf="@id/webView"
+            app:layout_constraintTop_toTopOf="@id/webView"
+            app:layout_constraintBottom_toBottomOf="@id/webView"/>
+
     <Button
             android:id="@+id/toggleButton"
             android:layout_width="wrap_content"
