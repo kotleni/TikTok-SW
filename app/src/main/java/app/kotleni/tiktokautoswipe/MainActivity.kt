@@ -1,6 +1,8 @@
 package app.kotleni.tiktokautoswipe
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
@@ -10,6 +12,7 @@ import android.view.MotionEvent.PointerProperties
 import android.webkit.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import app.kotleni.tiktokautoswipe.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -19,6 +22,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var prefs: SharedPreferences
     private var isEnabled = false
     private var score = 0
     private var lastScoreUpdate = 0L
@@ -85,10 +89,7 @@ class MainActivity : AppCompatActivity() {
             println("onVideoEnded()")
 
             if(System.currentTimeMillis() - lastScoreUpdate > 1_000) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    score += 1
-                    binding.videosScore.text = score.toString()
-                }
+                updateCounter()
                 lastScoreUpdate = System.currentTimeMillis()
             }
 
@@ -102,6 +103,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        prefs = getSharedPreferences("main", Context.MODE_PRIVATE)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -133,6 +136,8 @@ class MainActivity : AppCompatActivity() {
         binding.swipeButton.setOnClickListener {
             simulateSwipe()
         }
+
+        updateCounterView()
     }
 
     override fun onBackPressed() {
@@ -140,6 +145,20 @@ class MainActivity : AppCompatActivity() {
             binding.webView.goBack()
         else
             super.onBackPressed()
+    }
+
+    private fun updateCounter() = GlobalScope.launch(Dispatchers.Main) {
+        val totalCount = prefs.getInt("count", 0) + 1
+        prefs.edit {
+            putInt("count", totalCount)
+        }
+        score += 1
+        updateCounterView()
+    }
+
+    private fun updateCounterView() {
+        val totalCount = prefs.getInt("count", 0)
+        binding.videosScore.text = "${score}/${totalCount}"
     }
 
     private fun simulateSwipe() = GlobalScope.launch(Dispatchers.Main) {
