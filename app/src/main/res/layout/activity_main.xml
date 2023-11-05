@@ -36,6 +36,7 @@
             app:layout_constraintRight_toLeftOf="@id/toggleButton"/>
 
     <TextView
+            android:alpha="0.5"
             android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -47,12 +48,14 @@
             android:id="@+id/videosScore"/>
 
     <TextView
+            android:alpha="0.6"
             android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="t.me/kotleni"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             android:layout_margin="4dp"
             android:textColor="#727272"
             android:id="@+id/telegram"/>
