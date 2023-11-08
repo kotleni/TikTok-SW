@@ -15,6 +15,9 @@ import android.webkit.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import app.kotleni.tiktokautoswipe.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -159,6 +162,17 @@ class MainActivity : AppCompatActivity() {
             binding.webView.goBack()
         else
             super.onBackPressed()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Go to real fullscreen
+        val windowInsetsController =
+            WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun updateCounter() = GlobalScope.launch(Dispatchers.Main) {
